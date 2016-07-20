@@ -168,3 +168,27 @@ CProcedureInvoke:
     jmp        $                 ; Never reach here
 RendezvousFunnelProcEnd:
 
+;-------------------------------------------------------------------------------------
+;  AsmRelocateApLoop (MwaitSupport, ApTargetCState, PmCodeSegment);
+;-------------------------------------------------------------------------------------
+global ASM_PFX(AsmRelocateApLoop)
+ASM_PFX(AsmRelocateApLoop):
+AsmRelocateApLoopStart:
+    cmp        byte [esp + 4], 1
+    jnz        HltLoop
+MwaitLoop:
+    mov        eax, esp
+    xor        ecx, ecx
+    xor        edx, edx
+    monitor
+    mov        eax, [esp + 8]    ; Mwait Cx, Target C-State per eax[7:4]
+    shl        eax, 4
+    mwait
+    jmp        MwaitLoop
+HltLoop:
+    cli
+    hlt
+    jmp        HltLoop
+    ret
+AsmRelocateApLoopEnd:
+
