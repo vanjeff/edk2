@@ -35,6 +35,12 @@
 #include <Library/MtrrLib.h>
 #include <Library/HobLib.h>
 
+typedef enum {
+  ApInHltLoop   = 1,
+  ApInMwaitLoop = 2,
+  ApInRunLoop   = 3
+} AP_LOOP_MODE;
+
 //
 // AP reset code information
 //
