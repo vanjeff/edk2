@@ -34,6 +34,7 @@
 #include <Library/PrintLib.h>
 #include <Library/PeCoffGetEntryPointLib.h>
 #include <Library/PeCoffExtraActionLib.h>
+#include <Register/ArchitecturalMsr.h>
 
 #include <TransferProtocol.h>
 #include <ImageDebugSupport.h>
