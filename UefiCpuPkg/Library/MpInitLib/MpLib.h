@@ -35,6 +35,8 @@
 #include <Library/MtrrLib.h>
 #include <Library/HobLib.h>
 
+#define WAKEUP_AP_SIGNAL SIGNATURE_32 ('S', 'T', 'A', 'P')
+
 typedef enum {
   ApInHltLoop   = 1,
   ApInMwaitLoop = 2,
