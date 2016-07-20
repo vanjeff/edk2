@@ -47,6 +47,17 @@ typedef enum {
   ApInitDone     = 3
 } AP_INIT_STATE;
 
+//
+// AP state
+//
+typedef enum {
+  CpuStateIdle,
+  CpuStateReady,
+  CpuStateBusy,
+  CpuStateFinished,
+  CpuStateDisabled
+} CPU_STATE;
+
 typedef struct {
   SPIN_LOCK                      ApLock;
   volatile UINT32                *StartupApSignal;
@@ -56,6 +67,7 @@ typedef struct {
   UINT32                         ApicId;
   UINT32                         Health;
   BOOLEAN                        CpuHealthy;
+  volatile CPU_STATE             State;
   BOOLEAN                        Waiting;
   BOOLEAN                        *Finished;
   UINT64                         ExpectedTime;
