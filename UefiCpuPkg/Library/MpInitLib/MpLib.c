@@ -34,6 +34,11 @@ MpInitLibInitialize (
   VOID
   )
 {
+  MP_ASSEMBLY_ADDRESS_MAP  AddressMap;
+  UINTN                    ApResetVectorSize;
+
+  AsmGetAddressMap (&AddressMap);
+  ApResetVectorSize = AddressMap.RendezvousFunnelSize + sizeof (MP_CPU_EXCHANGE_INFO);
   return EFI_SUCCESS;
 }
 

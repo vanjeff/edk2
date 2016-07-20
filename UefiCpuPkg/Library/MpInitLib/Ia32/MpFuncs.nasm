@@ -192,3 +192,20 @@ HltLoop:
     ret
 AsmRellocateApLoopEnd:
 
+;-------------------------------------------------------------------------------------
+;  AsmGetAddressMap (&AddressMap);
+;-------------------------------------------------------------------------------------
+global ASM_PFX(AsmGetAddressMap)
+ASM_PFX(AsmGetAddressMap):
+    pushad
+    mov        ebp,esp
+
+    mov        ebx,  [ebp + 24h]
+    mov        dword [ebx], RendezvousFunnelProcStart
+    mov        dword [ebx +  4h], Flat32Start - RendezvousFunnelProcStart
+    mov        dword [ebx +  8h], RendezvousFunnelProcEnd - RendezvousFunnelProcStart
+    mov        dword [ebx + 0Ch], AsmRellocateApLoopStart
+    mov        dword [ebx + 10h], AsmRellocateApLoopEnd - AsmRellocateApLoopStart
+
+    popad
+    ret
