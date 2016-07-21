@@ -566,9 +566,8 @@ MpInitLibEnableDisableAP (
   IN  UINT32                    *HealthFlag OPTIONAL
   )
 {
-  return EFI_SUCCESS;
+  return EnableDisableApWorker (ProcessorNumber, EnableAP, HealthFlag);
 }
-
 
 /**
   This service switches the requested AP to be the BSP from that point onward.
