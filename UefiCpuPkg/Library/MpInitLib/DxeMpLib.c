@@ -452,5 +452,23 @@ MpInitLibEnableDisableAP (
   IN  UINT32                    *HealthFlag OPTIONAL
   )
 {
-  return EFI_SUCCESS;
+  EFI_STATUS     Status;
+  BOOLEAN        TempStopCheckState;
+
+  TempStopCheckState = FALSE;
+  //
+  // temporarily stop checkAllAPsStatus for initialize parameters.
+  //
+  if (!mStopCheckAllAPsStatus) {
+    mStopCheckAllAPsStatus = TRUE;
+    TempStopCheckState     = TRUE;
+  }
+
+  Status = EnableDisableApWorker (ProcessorNumber, EnableAP, HealthFlag);
+
+  if (TempStopCheckState) {
+    mStopCheckAllAPsStatus = FALSE;
+  }
+
+  return Status;
 }
