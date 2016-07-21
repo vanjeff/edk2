@@ -450,7 +450,18 @@ MpInitLibStartupAllAPs (
   OUT UINTN                     **FailedCpuList         OPTIONAL
   )
 {
-  return EFI_SUCCESS;
+  if (WaitEvent != NULL) {
+    return EFI_UNSUPPORTED;
+  }
+
+  return StartupAllAPsWorker (
+           Procedure,
+           SingleThread,
+           NULL,
+           TimeoutInMicroseconds,
+           ProcedureArgument,
+           FailedCpuList
+           );
 }
 
 /**
