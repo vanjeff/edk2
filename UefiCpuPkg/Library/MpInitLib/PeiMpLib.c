@@ -535,9 +535,19 @@ MpInitLibStartupThisAP (
   OUT BOOLEAN                   *Finished               OPTIONAL
   )
 {
-  return EFI_SUCCESS;
-}
+  if (WaitEvent != NULL) {
+    return EFI_UNSUPPORTED;
+  }
 
+  return StartupThisAPWorker (
+           Procedure,
+           ProcessorNumber,
+           NULL,
+           TimeoutInMicroseconds,
+           ProcedureArgument,
+           Finished
+           );
+}
 
 /**
   This service lets the caller enable or disable an AP from this point onward.
