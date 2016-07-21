@@ -19,6 +19,7 @@
 
 CPU_MP_DATA      *mCpuMpData = NULL;
 EFI_EVENT        mCheckAllAPsEvent = NULL;
+EFI_EVENT        mMpInitExitBootServicesEvent = NULL;
 volatile BOOLEAN mStopCheckAllAPsStatus = TRUE;
 
 /**
@@ -183,6 +184,94 @@ CheckAPsStatus (
 }
 
 /**
+  Get Protected mode code segment from current GDT table.
+
+  @returen  Protected mode code segment value.
+**/
+UINT16
+GetProtectedModeCS (
+  VOID
+  )
+{
+  IA32_DESCRIPTOR          GdtrDesc;
+  IA32_SEGMENT_DESCRIPTOR  *GdtEntry;
+  UINTN                    GdtEntryCount;
+  UINT16                   Index;
+
+  Index = (UINT16) -1;
+  AsmReadGdtr (&GdtrDesc);
+  GdtEntryCount = (GdtrDesc.Limit + 1) / sizeof (IA32_SEGMENT_DESCRIPTOR);
+  GdtEntry = (IA32_SEGMENT_DESCRIPTOR *) GdtrDesc.Base;
+  for (Index = 0; Index < GdtEntryCount; Index++) {
+    if (GdtEntry->Bits.L == 0) {
+      if (GdtEntry->Bits.Type > 8 && GdtEntry->Bits.L == 0) {
+        break;
+      }
+    }
+    GdtEntry++;
+  }
+  ASSERT (Index != -1);
+  return Index * 8;
+}
+
+/**
+  Do sync on APs.
+
+  @param[in, out] Buffer  Pointer to private data buffer.
+**/
+VOID
+EFIAPI
+RellocateApLoop (
+  IN OUT VOID  *Buffer
+  )
+{
+  CPU_MP_DATA            *CpuMpData;
+  BOOLEAN                MwaitSupport;
+  ASM_RELLOCATE_AP_LOOP  AsmRellocateApLoopFunc;
+
+  CpuMpData    = GetCpuMpData ();
+  MwaitSupport = IsMwaitSupport ();
+  AsmRellocateApLoopFunc = (ASM_RELLOCATE_AP_LOOP) (UINTN) Buffer;
+  AsmRellocateApLoopFunc (MwaitSupport, CpuMpData->ApTargetCState, CpuMpData->PmCodeSegment);
+  //
+  // It should never reach here
+  //
+  ASSERT (FALSE);
+}
+
+/**
+  Callback function for ExitBootServices.
+
+  @param[in]  Event             Event whose notification function is being invoked.
+  @param[in]  Context           The pointer to the notification function's context,
+                                which is implementation-dependent.
+
+**/
+VOID
+EFIAPI
+MpInitExitBootServicesCallback (
+  IN EFI_EVENT                Event,
+  IN VOID                     *Context
+  )
+{
+  CPU_MP_DATA               *CpuMpData;
+  VOID                      *ReservedApLoopFunc;
+  //
+  // Avoid APs access invalid buff data which allocated by BootServices,
+  // so we will allocate reserved data for AP loop code.
+  //
+  CpuMpData = GetCpuMpData ();
+  CpuMpData->PmCodeSegment = GetProtectedModeCS ();
+  CpuMpData->ApLoopMode = PcdGet8 (PcdCpuApLoopMode);
+  ReservedApLoopFunc = AllocateReservedCopyPool (
+                         CpuMpData->AddressMap.RellocateApLoopFuncSize,
+                         CpuMpData->AddressMap.RellocateApLoopFuncAddress
+                         );
+  WakeUpAP (CpuMpData, TRUE, 0, RellocateApLoop, ReservedApLoopFunc);
+  DEBUG ((DEBUG_INFO, "MpInitExitBootServicesCallback() done!\n"));
+}
+
+/**
   Initialize global data for MP support.
 
   @param[in] CpuMpData  The pointer to CPU MP Data structure.
@@ -215,6 +304,14 @@ InitMpGlobalData (
                   );
   ASSERT_EFI_ERROR (Status);
 
+  Status = gBS->CreateEvent (
+                  EVT_SIGNAL_EXIT_BOOT_SERVICES,
+                  TPL_CALLBACK,
+                  MpInitExitBootServicesCallback,
+                  NULL,
+                  &mMpInitExitBootServicesEvent
+                  );
+  ASSERT_EFI_ERROR (Status);
 }
 
 /**
