@@ -601,7 +601,7 @@ MpInitLibEnableDisableAP (
   IN  UINT32                    *HealthFlag OPTIONAL
   )
 {
-  return EFI_UNSUPPORTED;
+  return EnableDisableApWorker (ProcessorNumber, EnableAP, HealthFlag);
 }
 
 
