@@ -302,7 +302,28 @@ MpInitLibStartupAllAPs (
   OUT UINTN                     **FailedCpuList         OPTIONAL
   )
 {
-  return EFI_SUCCESS;
+  EFI_STATUS              Status;
+
+  //
+  // Temporarily stop checkAllApsStatus for avoid resource dead-lock.
+  //
+  mStopCheckAllApsStatus = TRUE;
+
+  Status = StartupAllAPsWorker (
+             Procedure,
+             SingleThread,
+             WaitEvent,
+             TimeoutInMicroseconds,
+             ProcedureArgument,
+             FailedCpuList
+             );
+
+  //
+  // Start checkAllApsStatus
+  //
+  mStopCheckAllApsStatus = FALSE;
+
+  return Status;
 }
 
 /**
@@ -390,7 +411,7 @@ MpInitLibStartupThisAP (
   EFI_STATUS              Status;
 
   //
-  // temporarily stop checkAllAPsStatus for avoid resource dead-lock.
+  // temporarily stop checkAllApsStatus for avoid resource dead-lock.
   //
   mStopCheckAllApsStatus = TRUE;
 
