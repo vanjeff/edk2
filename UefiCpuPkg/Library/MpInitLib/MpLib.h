@@ -323,6 +323,87 @@ InitMpGlobalData (
   );
 
 /**
+  Worker function to let the caller get one enabled AP to execute a caller-provided
+  function.
+
+  @param[in]  Procedure               A pointer to the function to be run on
+                                      enabled APs of the system. See type
+                                      EFI_AP_PROCEDURE.
+  @param[in]  ProcessorNumber         The handle number of the AP. The range is
+                                      from 0 to the total number of logical
+                                      processors minus 1. The total number of
+                                      logical processors can be retrieved by
+                                      MpInitLibGetNumberOfProcessors().
+  @param[in]  WaitEvent               The event created by the caller with CreateEvent()
+                                      service.  If it is NULL, then execute in
+                                      blocking mode. BSP waits until all APs finish
+                                      or TimeoutInMicroSeconds expires.  If it's
+                                      not NULL, then execute in non-blocking mode.
+                                      BSP requests the function specified by
+                                      Procedure to be started on all the enabled
+                                      APs, and go on executing immediately. If
+                                      all return from Procedure or TimeoutInMicroSeconds
+                                      expires, this event is signaled. The BSP
+                                      can use the CheckEvent() or WaitForEvent()
+                                      services to check the state of event.  Type
+                                      EFI_EVENT is defined in CreateEvent() in
+                                      the Unified Extensible Firmware Interface
+                                      Specification.
+  @param[in]  TimeoutInMicrosecsond   Indicates the time limit in microseconds for
+                                      APs to return from Procedure, either for
+                                      blocking or non-blocking mode. Zero means
+                                      infinity.  If the timeout expires before
+                                      all APs return from Procedure, then Procedure
+                                      on the failed APs is terminated. All enabled
+                                      APs are available for next function assigned
+                                      by MpInitLibStartupAllAPs() or
+                                      MpInitLibStartupThisAP().
+                                      If the timeout expires in blocking mode,
+                                      BSP returns EFI_TIMEOUT.  If the timeout
+                                      expires in non-blocking mode, WaitEvent
+                                      is signaled with SignalEvent().
+  @param[in]  ProcedureArgument       The parameter passed into Procedure for
+                                      all APs.
+  @param[out] Finished                If NULL, this parameter is ignored.  In
+                                      blocking mode, this parameter is ignored.
+                                      In non-blocking mode, if AP returns from
+                                      Procedure before the timeout expires, its
+                                      content is set to TRUE. Otherwise, the
+                                      value is set to FALSE. The caller can
+                                      determine if the AP returned from Procedure
+                                      by evaluating this value.
+
+  @retval EFI_SUCCESS             In blocking mode, specified AP finished before
+                                  the timeout expires.
+  @retval EFI_SUCCESS             In non-blocking mode, the function has been
+                                  dispatched to specified AP.
+  @retval EFI_UNSUPPORTED         A non-blocking mode request was made after the
+                                  UEFI event EFI_EVENT_GROUP_READY_TO_BOOT was
+                                  signaled.
+  @retval EFI_UNSUPPORTED         WaitEvent is not NULL if non-blocking mode is not
+                                  supported.
+  @retval EFI_DEVICE_ERROR        The calling processor is an AP.
+  @retval EFI_TIMEOUT             In blocking mode, the timeout expired before
+                                  the specified AP has finished.
+  @retval EFI_NOT_READY           The specified AP is busy.
+  @retval EFI_NOT_READY           MP Initialize Library is not initialized.
+  @retval EFI_NOT_FOUND           The processor with the handle specified by
+                                  ProcessorNumber does not exist.
+  @retval EFI_INVALID_PARAMETER   ProcessorNumber specifies the BSP or disabled AP.
+  @retval EFI_INVALID_PARAMETER   Procedure is NULL.
+
+**/
+EFI_STATUS
+StartupThisAPWorker (
+  IN  EFI_AP_PROCEDURE          Procedure,
+  IN  UINTN                     ProcessorNumber,
+  IN  EFI_EVENT                 WaitEvent               OPTIONAL,
+  IN  UINTN                     TimeoutInMicroseconds,
+  IN  VOID                      *ProcedureArgument      OPTIONAL,
+  OUT BOOLEAN                   *Finished               OPTIONAL
+  );
+
+/**
   Worker function to switch the requested AP to be the BSP from that point onward.
 
   @param[in] ProcessorNumber   The handle number of AP that is to become the new

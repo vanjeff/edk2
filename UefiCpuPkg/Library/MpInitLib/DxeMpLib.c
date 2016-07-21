@@ -387,7 +387,25 @@ MpInitLibStartupThisAP (
   OUT BOOLEAN                   *Finished               OPTIONAL
   )
 {
-  return EFI_SUCCESS;
+  EFI_STATUS              Status;
+
+  //
+  // temporarily stop checkAllAPsStatus for avoid resource dead-lock.
+  //
+  mStopCheckAllApsStatus = TRUE;
+
+  Status = StartupThisAPWorker (
+             Procedure,
+             ProcessorNumber,
+             WaitEvent,
+             TimeoutInMicroseconds,
+             ProcedureArgument,
+             Finished
+             );
+
+  mStopCheckAllApsStatus = FALSE;
+
+  return Status;
 }
 
 /**
