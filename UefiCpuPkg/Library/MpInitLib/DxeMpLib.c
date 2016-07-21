@@ -13,7 +13,13 @@
 **/
 
 #include "MpLib.h"
+
+#include <Library/UefiLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+
 CPU_MP_DATA      *mCpuMpData = NULL;
+EFI_EVENT        mCheckAllAPsEvent = NULL;
+volatile BOOLEAN mStopCheckAllAPsStatus = TRUE;
 
 /**
   Get the pointer to CPU MP Data structure.
@@ -43,6 +49,43 @@ SaveCpuMpData (
 }
 
 /**
+/**
+  Checks APs status and updates APs status if needed.
+
+**/
+VOID
+CheckAndUpdateAPsStatus (
+  VOID
+  )
+{
+}
+
+/**
+  Checks APs' status periodically.
+
+  This function is triggerred by timer perodically to check the
+  state of APs for StartupAllAPs() and StartupThisAP() executed
+  in non-blocking mode.
+
+  @param[in]  Event    Event triggered.
+  @param[in]  Context  Parameter passed with the event.
+
+**/
+VOID
+EFIAPI
+CheckAPsStatus (
+  IN  EFI_EVENT                           Event,
+  IN  VOID                                *Context
+  )
+{
+  //
+  // If CheckAPsStatus() is not stopped, otherwise return immediately.
+  //
+  if (!mStopCheckAllAPsStatus) {
+    CheckAndUpdateAPsStatus ();
+  }
+}
+/**
   Initialize global data for MP support.
 
   @param[in] CpuMpData  The pointer to CPU MP Data structure.
@@ -52,7 +95,18 @@ InitMpGlobalData (
   IN CPU_MP_DATA               *CpuMpData
   )
 {
+  EFI_STATUS     Status;
+
   SaveCpuMpData (CpuMpData);
+
+  Status = gBS->CreateEvent (
+                  EVT_TIMER | EVT_NOTIFY_SIGNAL,
+                  TPL_NOTIFY,
+                  CheckAPsStatus,
+                  NULL,
+                  &mCheckAllAPsEvent
+                  );
+  ASSERT_EFI_ERROR (Status);
 
 }
 
