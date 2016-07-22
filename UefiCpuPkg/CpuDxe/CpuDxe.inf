@@ -29,7 +29,6 @@
 
 [LibraryClasses]
   BaseLib
-  BaseMemoryLib
   CpuLib
   DebugLib
   DxeServicesTableLib
@@ -41,34 +40,15 @@
   UefiCpuLib
   UefiLib
   CpuExceptionHandlerLib
-  TimerLib
-  SynchronizationLib
   HobLib
   ReportStatusCodeLib
   MpInitLib
 
 [Sources]
-  ApStartup.c
   CpuDxe.c
   CpuDxe.h
-  CpuGdt.c
-  CpuGdt.h
   CpuMp.c
   CpuMp.h
-
-[Sources.IA32]
-  Ia32/CpuAsm.asm
-  Ia32/CpuAsm.nasm
-  Ia32/CpuAsm.S
-  Ia32/MpAsm.asm
-  Ia32/MpAsm.nasm
-
-[Sources.X64]
-  X64/CpuAsm.asm
-  X64/CpuAsm.nasm
-  X64/CpuAsm.S
-  X64/MpAsm.asm
-  X64/MpAsm.nasm
 
 [Protocols]
   gEfiCpuArchProtocolGuid                       ## PRODUCES
