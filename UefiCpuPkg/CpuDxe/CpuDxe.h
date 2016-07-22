@@ -1,7 +1,7 @@
 /** @file
-  CPU DXE Module.
+  CPU DXE Module to produce CPU ARCH Protocol and CPU MP Protocol.
 
-  Copyright (c) 2008 - 2013, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2008 - 2016, Intel Corporation. All rights reserved.<BR>
   This program and the accompanying materials
   are licensed and made available under the terms and conditions of the BSD License
   which accompanies this distribution.  The full text of the license may be found at
@@ -18,13 +18,16 @@
 #include <PiDxe.h>
 
 #include <Protocol/Cpu.h>
+#include <Protocol/MpService.h>
+
+#include <Ppi/SecPlatformInformation.h>
+#include <Ppi/SecPlatformInformation2.h>
 
 #include <Library/UefiDriverEntryPoint.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DxeServicesTableLib.h>
 #include <Library/BaseLib.h>
 #include <Library/CpuLib.h>
-#include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MtrrLib.h>
@@ -32,7 +35,10 @@
 #include <Library/UefiCpuLib.h>
 #include <Library/UefiLib.h>
 #include <Library/CpuExceptionHandlerLib.h>
-#include <Library/TimerLib.h>
+#include <Library/HobLib.h>
+#include <Library/ReportStatusCodeLib.h>
+#include <Library/MpInitLib.h>
+
 #include <Guid/IdleLoopEvent.h>
 #include <Guid/VectorHandoffTable.h>
 
@@ -217,39 +223,6 @@ CpuSetMemoryAttributes (
   IN EFI_PHYSICAL_ADDRESS       BaseAddress,
   IN UINT64                     Length,
   IN UINT64                     Attributes
-  );
-
-/**
-  Initialize Global Descriptor Table.
-
-**/
-VOID
-InitGlobalDescriptorTable (
-  VOID
-  );
-
-/**
-  Sets the code selector (CS).
-
-  @param  Selector  Value of code selector.
-
-**/
-VOID
-EFIAPI
-SetCodeSelector (
-  UINT16 Selector
-  );
-
-/**
-  Sets the data selector (DS).
-
-  @param  Selector  Value of data selector.
-
-**/
-VOID
-EFIAPI
-SetDataSelectors (
-  UINT16 Selector
   );
 
 #endif
