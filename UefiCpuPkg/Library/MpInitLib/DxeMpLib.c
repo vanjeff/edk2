@@ -49,6 +49,65 @@ SaveCpuMpData (
 }
 
 /**
+  Allocate reset vector buffer.
+
+  @param[in, out]  CpuMpData  The pointer to CPU MP Data structure.
+**/
+VOID
+AllocateResetVector (
+  IN OUT CPU_MP_DATA          *CpuMpData
+  )
+{
+  EFI_STATUS            Status;
+  UINTN                 ApResetVectorSize;
+  EFI_PHYSICAL_ADDRESS  StartAddress;
+
+  ApResetVectorSize = CpuMpData->AddressMap.RendezvousFunnelSize +
+                      sizeof (MP_CPU_EXCHANGE_INFO);
+
+  StartAddress = BASE_1MB;
+  Status = gBS->AllocatePages (
+                  AllocateMaxAddress,
+                  EfiACPIMemoryNVS,
+                  EFI_SIZE_TO_PAGES (ApResetVectorSize),
+                  &StartAddress
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  CpuMpData->WakeupBuffer      = (UINTN) StartAddress;
+  CpuMpData->MpCpuExchangeInfo = (MP_CPU_EXCHANGE_INFO *) (UINTN)
+                  (CpuMpData->WakeupBuffer + CpuMpData->AddressMap.RendezvousFunnelSize);
+  //
+  // copy AP reset code in it
+  //
+  CopyMem (
+    (VOID *) CpuMpData->WakeupBuffer,
+    (VOID *) CpuMpData->AddressMap.RendezvousFunnelAddress,
+    CpuMpData->AddressMap.RendezvousFunnelSize
+    );
+}
+
+/**
+  Free AP reset vector buffer.
+
+  @param[in]  CpuMpData  The pointer to CPU MP Data structure.
+**/
+VOID
+FreeResetVector (
+  IN CPU_MP_DATA              *CpuMpData
+  )
+{
+  EFI_STATUS            Status;
+  UINTN                 ApResetVectorSize;
+  ApResetVectorSize = CpuMpData->AddressMap.RendezvousFunnelSize +
+                      sizeof (MP_CPU_EXCHANGE_INFO);
+  Status = gBS->FreePages(
+             (EFI_PHYSICAL_ADDRESS)CpuMpData->WakeupBuffer,
+             EFI_SIZE_TO_PAGES (ApResetVectorSize)
+             );
+  ASSERT_EFI_ERROR (Status);
+}
+
 /**
   Checks APs status and updates APs status if needed.
 
@@ -85,6 +144,7 @@ CheckApsStatus (
     CheckAndUpdateApsStatus ();
   }
 }
+
 /**
   Initialize global data for MP support.
 
